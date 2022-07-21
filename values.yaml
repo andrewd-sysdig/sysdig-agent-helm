@@ -1,0 +1,196 @@
+# Required: Setting a cluster name allows you to filter events from this cluster using kubernetes.cluster.name
+clusterName: ""
+
+# Required: Your Sysdig Access Key - from Settings -> Agent Installation page. 
+# **** NOTE: this is different than your API Token. ****
+accessKey: ""
+
+# Required: You need your Sysdig Region API endpoint here
+apiEndpoint: ""
+
+# Priority Class Name for all Sysdig agent components
+priorityClassName: "system-node-critical"
+
+### Sysdig-agent ###
+sysdig-agent:
+  enable: true
+  log_level.file: "info"
+  log_level.console: "info"
+  resourceProfile: small
+  image:
+    registry: quay.io 
+    repository: sysdig/agent-slim
+    tag: 12.7.1
+    digest:
+    pullPolicy: IfNotPresent
+
+  kmoduleImage:
+    repository: sysdig/agent-kmodule
+    digest:
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 348Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+
+### Vulnerability Managment Runtime Scanner ###
+runtimeScanner:
+  enable: false
+  eveEnabled: true
+  image:
+    registry: quay.io 
+    repository: sysdig/vuln-runtime-scanner
+    tag: 1.1.1
+    digest:
+    pullPolicy: IfNotPresent
+
+  extraMounts: []
+  # example for bottlerocket
+  # extraMounts:
+  #   - name: socketpath
+  #     mountPath: /var/run/containerd/containerd.sock
+
+  resources:
+    requests:
+      cpu: 150m
+      memory: 512Mi
+      ephemeral-storage: "2Gi"
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+      ephemeral-storage: "4Gi"
+
+### Actionable Compliance - KSPM ###
+kspm:
+  enable: false
+
+  kspmAnalyzer:
+    debug: false
+    image:
+      repository: sysdig/kspm-analyzer
+      tag: 1.5.0
+      digest:
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 150m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1536Mi
+
+  kspmCollector:
+    debug: false
+    image:
+      repository: sysdig/kspm-collector
+      tag: 1.5.0
+      digest:
+      pullPolicy: IfNotPresent
+
+    settings:
+      replicas: 1
+      namespaces:
+        included: ""
+        excluded: ""
+      workloads:
+        included: ""
+        excluded: ""
+      healthIntervalMin: 5
+
+    resources:
+      requests:
+        cpu: 150m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1536Mi
+
+### Legacy/Unified Compliance - Benchmark Runner ###
+benchmarkRunner:
+  enable: false
+  includeSensitivePermissions: false
+
+  image:
+    repository: sysdig/compliance-benchmark-runner
+    tag: 1.0.17.2
+    digest:
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 150m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+### Legacy Vulnerability Scanning Engine - Runtime Scanning ###
+nodeImageAnalyzer:
+  enable: false
+  debug: false
+  priorityClassName:
+  image:
+    repository: sysdig/node-image-analyzer
+    tag: 0.1.16
+    digest:
+    pullPolicy: IfNotPresent
+    # pullSecrets:
+    #   - name: myRegistrKeySecretName
+  resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1024Mi
+
+### Legacy Vulnerability Scanning Engine - Host Scanning ###
+hostAnalyzer:
+  enable: false
+  image:
+    repository: sysdig/host-analyzer
+    tag: 0.1.9
+    digest:
+    pullPolicy: IfNotPresent
+
+  # The scanning schedule specification for the host analyzer expressed as a crontab string such as “5 4 * * *”.
+  # The default value of @dailydefault instructs the analyzer to automatically pick a schedule that will start
+  # shortly after it is deployed and will perform a scan every 24 hours.
+  schedule: "@dailydefault"
+
+  # The list of directories to inspect during the scan, expressed as a comma separated list.
+  # dirsToScan: "/etc,/var/lib/dpkg,/usr/local,/usr/lib/sysimage/rpm,/var/lib/rpm,/lib/apk/db"
+
+  # The number of times the analysis collector is allowed to retry sending results if backend communication fails.
+  # maxSendAttempts: 3
+
+  resources:
+    requests:
+      cpu: 150m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1536Mi
+
+### EVE Connector for feeding third party systems data ###
+eveConnector:
+  enable: false
+  image:
+    registry: quay.io 
+    repository: sysdig/eveclient-api
+    tag: 1.0.0
+    digest:
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  settings:
+    replicas: 1
